@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <openerp>
     <data>
-<!-- Return line -->
-        <!-- SEARCH -->
         <record id="view_crm_claim_lines_filter" model="ir.ui.view">
             <field name="name">CRM - Claims Search</field>
             <field name="model">claim.line</field>
@@ -171,9 +169,6 @@
                             <field name="invoice_id" on_change="onchange_invoice_id(invoice_id, warehouse_id, claim_type, date, company_id, claim_line_ids, True, context)" domain="['|',('commercial_partner_id','=',partner_id),('partner_id','=',partner_id)]" />
                             <field name="delivery_address_id" context="{'tree_view_ref': 'crm_claim_rma.view_partner_contact_tree', 'search_default_parent_id': partner_id}"/>
                         </group>
-                        <group>
-                            <!-- Place for mass return button from crm_rma_lot_mass_return -->
-                        </group>
                         <field name="claim_line_ids" nolabel="1" colspan="4" editable="top">
                             <form string="Claim Line" version="7.0">
                                 <header>
@@ -215,33 +210,33 @@
                                             <field name="warranty_type"/>
                                         </group>
                                     </group>
-                                    <separator string="State" colspan="4"/>
+                                    <!-- <separator string="State" colspan="4"/>
                                     <group col="6" colspan="4">
                                         <field name="state"/>
                                         <field name="substate_id" widget='selection' />
                                         <field name="last_state_change"/>
-                                    </group>
+                                    </group> -->
                                 </sheet>
                             </form>
                         </field>
                     </group>
-                    <group col="4" colspan="4" attrs="{'invisible':[('state', '&lt;&gt;','open')]}">
+                    <group col="4" colspan="4">
                         <separator string="Action" colspan="4" />
                         <button name="%(action_claim_picking_in)d"
-                                string="New Products Return" states="open"
+                                string="New Products Return"
                                 type="action" target="new"
                                 context="{'warehouse_id': warehouse_id,
                                     'partner_id': partner_id}"/>
 
                         <button name="%(action_claim_picking_out)d"
-                                string="New Delivery" states="open"
+                                string="New Delivery" 
                                 type="action" target="new"
                                 context="{'warehouse_id': warehouse_id,
                                     'partner_id': partner_id}"/>
 
                         <button name="%(account.action_account_invoice_refund)d"
                                 type='action' string='New Refund'
-                                states='open' icon="gtk-execute"
+                                icon="gtk-execute"
                                 context="{
                                     'invoice_ids': [invoice_id],
                                     'claim_line_ids': claim_line_ids,
@@ -256,7 +251,7 @@
                     <separator colspan="2" string="Receptions / Deliveries"/>
                     <field name="picking_ids" colspan="4" readonly="1"/>
                 </page>
-	       </page>
+           </page>
         </field>
     </record>
 
@@ -300,14 +295,14 @@
         domain="[('type', '=', 'in')]"
         id="act_crm_claim_rma_picking_in" 
         name="Incoming Shipment and Returns" 
-        res_model="stock.picking.in"
+        res_model="stock.picking"
         src_model="crm.claim"/>  
 <!-- Right side link to picking out -->
         <act_window 
         domain="[('type', '=', 'out')]"
         id="act_crm_claim_rma_picking_out" 
         name="Deliveries" 
-        res_model="stock.picking.out"
+        res_model="stock.picking"
         src_model="crm.claim"/>  
 
     <record model="ir.ui.view" id="crm_claim_rma_form_view2">
@@ -333,37 +328,40 @@
                 </field>
                 <xpath expr="//sheet[@string='Claims']/group[1]" position="inside">
                     <div class="oe_right oe_button_box" name="buttons">
-                        <button name="%(act_crm_claim_rma_sale_orders)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_sale_orders)d" type="action"
                                 string="Quotations and Sales"
+                                icon="fa-strikethrough"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['supplier','other'])]}"
                                 context="{'search_default_partner_id': [partner_id],'search_default_user_id':False}"
                                />
-                        <button name="%(act_crm_claim_rma_invoice_out)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_invoice_out)d" type="action"
                                 string="Customer Invoices"
+                                icon="fa-pencil-square-o"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['supplier','other'])]}"
                                 context="{'search_default_partner_id': [partner_id],'search_default_user_id':False}"
                                />
-                        <button name="%(act_crm_claim_rma_refunds_out)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_refunds_out)d" type="action"
                                 string="Customer Refunds"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['supplier','other'])]}"
                                 context="{'search_default_partner_id': [partner_id],'search_default_user_id':False}"
                                />
-                        <button name="%(act_crm_claim_rma_invoice_in)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_invoice_in)d" type="action"
                                 string="Supplier Invoices"
+                                icon="fa-pencil-square-o"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['customer','other'])]}"
                                 context="{'search_default_partner_id': [partner_id],'search_default_user_id':False}"
                                />
-                        <button name="%(act_crm_claim_rma_refunds_in)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_refunds_in)d" type="action"
                                 string="Supplier Refunds"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['customer','other'])]}"
                                 context="{'search_default_partner_id': [partner_id],'search_default_user_id':False}"
                                />
-                        <button name="%(act_crm_claim_rma_picking_in)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_picking_in)d" type="action"
                                 string="Returned Products"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['supplier','other'])]}"
                                 context="{'search_default_claim_id': active_id,'search_default_user_id':False}"
                                />
-                        <button name="%(act_crm_claim_rma_picking_out)d" type="action"
+                        <button class="oe_inline oe_stat_button" name="%(act_crm_claim_rma_picking_out)d" type="action"
                                 string="Deliveries"
                                 attrs="{'invisible': ['|',('partner_id','=', False),('claim_type','in', ['supplier','other'])]}"
                                 context="{'search_default_partner_id': [partner_id],'search_default_user_id':False}"
@@ -373,7 +371,7 @@
             </field>
     </record>
 
- <!-- Crm claim Search view -->
+    <!-- Crm claim Search view -->
     <record id="view_crm_case_claims_filter" model="ir.ui.view">
         <field name="name">CRM - Claims Search</field>
         <field name="model">crm.claim</field>
@@ -387,12 +385,6 @@
             </filter>
         </field>
     </record>
-
-       
-<!-- Menu -->
-        <record model="ir.actions.act_window" id="crm_claim.crm_case_categ_claim0">
-            <field name="context">{"search_default_user_id":uid, "stage_type":'claim'}</field>
-        </record>
 
     <!-- return lines action -->
         <record model="ir.actions.act_window" id="act_crm_case_claim_lines">

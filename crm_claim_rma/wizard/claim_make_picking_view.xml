@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  crm_claim_rma for OpenERP
-  Copyright (C) 2011 Akretion Benoît GUILLOT <benoit.guillot@akretion.com>
-  The licence is in the file __openerp__.py
--->
 <openerp>
     <data>
 
@@ -34,7 +29,7 @@
             <field name="view_type">form</field>
             <field name="view_mode">form</field>
             <field name="target">new</field> 
-            <field name="context">{'picking_type': 'in','product_return': True}</field>
+            <field name="context">{'picking_type': 'incoming','product_return': True}</field>
         </record>
 
         <record id="action_claim_picking_out" model="ir.actions.act_window">

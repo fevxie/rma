@@ -20,40 +20,36 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-from openerp.osv import fields, orm
-from tools.translate import _
+from openerp import models, fields, api
+from openerp.tools.translate import _
+from openerp.osv import orm
 
 
-class account_invoice(orm.Model):
+class AccountInvoice(models.Model):
 
     _inherit = "account.invoice"
 
-    _columns = {
-        'claim_id': fields.many2one('crm.claim', 'Claim'),
-    }
+    claim_id = fields.Many2one(
+        comodel_name='crm.claim',
+        string='Claim')
 
-    def _refund_cleanup_lines(self, cr, uid, lines, context=None):
+    @api.model
+    def _refund_cleanup_lines(self, lines):
         """ Override when from claim to update the quantity and link to the
         claim line."""
-        if context is None:
-            context = {}
         new_lines = []
-        inv_line_obj = self.pool.get('account.invoice.line')
-        claim_line_obj = self.pool.get('claim.line')
+        inv_line_obj = self.env['account.invoice.line']
+        claim_line_obj = self.env['claim.line']
         # check if is an invoice_line and we are from a claim
-        if not (context.get('claim_line_ids') and lines and
+        if not (self._context.get('claim_line_ids') and lines and
                 lines[0]._name == 'account.invoice.line'):
-            return super(account_invoice, self)._refund_cleanup_lines(
-                cr, uid, lines, context=None)
+            return super(AccountInvoice, self)._refund_cleanup_lines(lines)
 
-        for __, claim_line_id, __ in context.get('claim_line_ids'):
-            line = claim_line_obj.browse(cr, uid, claim_line_id,
-                                         context=context)
+        for __, claim_line_id, __ in self._context.get('claim_line_ids'):
+            line = claim_line_obj.browse(claim_line_id)
             if not line.refund_line_id:
                 # For each lines replace quantity and add claim_line_id
-                inv_line = inv_line_obj.browse(cr, uid,
-                                               line.invoice_line_id.id,
-                                               context=context)
+                inv_line = inv_line_obj.browse(line.invoice_line_id.id)
                 clean_line = {}
                 for field_name, field in inv_line._all_columns.iteritems():
                     column_type = field.column._type
@@ -77,33 +73,31 @@ class account_invoice(orm.Model):
                 _('A refund has already been created for this claim !'))
         return [(0, 0, l) for l in new_lines]
 
-    def _prepare_refund(self, cr, uid, invoice, date=None, period_id=None,
-                        description=None, journal_id=None, context=None):
-        if context is None:
-            context = {}
-        result = super(account_invoice, self)._prepare_refund(
-            cr, uid, invoice,
-            date=date, period_id=period_id, description=description,
-            journal_id=journal_id, context=context)
-        if context.get('claim_id'):
-            result['claim_id'] = context['claim_id']
+    @api.model
+    def _prepare_refund(self, invoice, date=None, period_id=None,
+                        description=None, journal_id=None):
+        result = super(AccountInvoice, self)._prepare_refund(
+            invoice, date=date,
+            period_id=period_id, description=description,
+            journal_id=journal_id)
+        if self._context.get('claim_id'):
+            result['claim_id'] = self._context['claim_id']
         return result
 
 
-class account_invoice_line(orm.Model):
+class AccountInvoiceLine(models.Model):
 
     _inherit = "account.invoice.line"
 
-    def create(self, cr, uid, vals, context=None):
+    @api.model
+    def create(self, vals):
         claim_line_id = False
         if vals.get('claim_line_id'):
             claim_line_id = vals['claim_line_id']
             del vals['claim_line_id']
-        line_id = super(account_invoice_line, self).create(
-            cr, uid, vals, context=context)
+        line = super(AccountInvoiceLine, self).create(vals)
         if claim_line_id:
-            claim_line_obj = self.pool.get('claim.line')
-            claim_line_obj.write(cr, uid, claim_line_id,
-                                 {'refund_line_id': line_id},
-                                 context=context)
-        return line_id
+            claim_line_obj = self.env['claim.line']
+            claim_line = claim_line_obj.browse(claim_line_id)
+            claim_line.write({'refund_line_id': line.id})
+        return line
